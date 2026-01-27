@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  nama     String
+  username String
+  password String
+  role_id  Int
+
+  role Role @relation(fields: [role_id], references: [id])
+
+  @@map("users")
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String
+  users User[]
+
+  @@map("roles")
+}
+
+model Pasien {
+  id               Int          @id @default(autoincrement())
+  nama             String?
+  jenis_kelamin    JenisKelamin
+  pendidikan       String
+  pekerjaan        String
+  id_jenis_Layanan Int
+  alamat           String?
+  no_hp            String
+  survei           Survei[]
+
+  jenisLayanan JenisLayanan @relation(fields: [id_jenis_Layanan], references: [id])
+
+  @@map("pasien")
+}
+
+model JenisLayanan {
+  id     Int      @id @default(autoincrement())
+  nama   String
+  aktif  Boolean
+  pasien Pasien[]
+}
+
+model Survei {
+  id         Int          @id @default(autoincrement())
+  id_pasien  Int
+  status     StatusSurvei @default(PENDING)
+  created_at DateTime     @default(now()) @db.Timestamp
+
+  pasien             Pasien               @relation(fields: [id_pasien], references: [id])
+  respondenPelayanan RespondenPelayanan[]
+  keluhan            Keluhan[]
+
+  @@map("survei")
+}
+
+model RespondenPelayanan {
+  id            Int @id @default(autoincrement())
+  id_survei     Int
+  id_pertanyaan Int
+  nilai         Int
+
+  survei     Survei     @relation(fields: [id_survei], references: [id])
+  pertanyaan Pertanyaan @relation(fields: [id_pertanyaan], references: [id])
+
+  @@map("responden_pelayanan")
+}
+
+model Keluhan {
+  id        Int      @id @default(autoincrement())
+  id_survei Int
+  tanggal   DateTime @db.Date
+  pukul     DateTime @db.Time()
+  masukan   String   @db.Text
+
+  survei Survei @relation(fields: [id_survei], references: [id])
+
+  @@map("keluhan")
+}
+
+model Pertanyaan {
+  id                 Int                  @id @default(autoincrement())
+  deskripsi          String               @db.Text
+  aktif              Boolean
+  respondenPelayanan RespondenPelayanan[]
+
+  @@map("pertanyaan")
+}
+
+enum JenisKelamin {
+  L
+  P
+}
+
+enum StatusSurvei {
+  PENDING
+  PROSES
+  FINISH
+}
