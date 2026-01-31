@@ -1,28 +1,36 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import { PrismaService } from './prisma.service';
+import { ValidationService } from './validation.service';
+import { APP_FILTER } from '@nestjs/core';
+import { ErrorFilter } from './error.filter';
 
 @Global()
 @Module({
   imports: [
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     WinstonModule.forRoot({
       format: winston.format.json(),
       transports: [new winston.transports.Console()],
     }),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     ConfigModule.forRoot({
       isGlobal: true,
     }),
   ],
-  providers: [PrismaService],
-  exports: [PrismaService],
+  providers: [
+    PrismaService,
+    ValidationService,
+    {
+      provide: APP_FILTER,
+      useClass: ErrorFilter,
+    },
+  ],
+  exports: [PrismaService, ValidationService],
 })
 export class CommonModule implements NestModule {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   configure(consumer: MiddlewareConsumer) {
     // consumer.apply(AuthMiddleware).forRoutes('/api/*');
   }
